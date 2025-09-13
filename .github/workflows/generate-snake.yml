@@ -2,7 +2,7 @@ name: Generate Snake
 
 on:
   schedule:
-    - cron: "0 */12 * * *"
+    - cron: "0 */12 * * *"  # Every 12 hours
   workflow_dispatch:
   push:
     branches:
@@ -13,9 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Clone repo
         uses: actions/checkout@v3
     
+      # Step 2: Generate snake files
       - name: Generate the snake files in './dist/'
         uses: Platane/snk@v3
         id: snake-gif
@@ -28,16 +30,34 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Add generated files
+      # Step 3: Configure Git for commits
+      - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Step 4: Commit generated files
+      - name: Commit generated files
+        run: |
           git add dist/
           git commit -m "Update snake animations" || echo "No changes to commit"
 
+      # Step 5: Push to output branch
       - name: Push to output branch
         run: |
-          git fetch origin output || git checkout --orphan output
-          git push origin HEAD:output --force
+          # Check if output branch exists
+          if git ls-remote --exit-code --heads origin output; then
+            git checkout output
+          else
+            git checkout --orphan output
+            git rm -rf .
+          fi
+
+          # Add and commit generated files (again, in case of orphan branch)
+          git add dist/
+          git commit -m "Update snake animations" || echo "No changes to commit"
+
+          # Push branch
+          git push origin output --force
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
