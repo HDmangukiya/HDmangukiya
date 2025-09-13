@@ -2,7 +2,7 @@ name: Generate Snake
 
 on:
   schedule:
-    - cron: "0 */12 * * *"  # Every 12 hours
+    - cron: "0 */12 * * *"
   workflow_dispatch:
   push:
     branches:
@@ -14,11 +14,13 @@ jobs:
 
     steps:
       # Step 1: Checkout the repository
-      - name: Clone repo
+      - name: Checkout repo
         uses: actions/checkout@v3
-    
+        with:
+          fetch-depth: 0  # Fetch all branches, not just main
+
       # Step 2: Generate snake files
-      - name: Generate the snake files in './dist/'
+      - name: Generate snake files
         uses: Platane/snk@v3
         id: snake-gif
         with:
@@ -30,7 +32,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 3: Configure Git for commits
+      # Step 3: Configure Git
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
@@ -45,8 +47,9 @@ jobs:
       # Step 5: Push to output branch
       - name: Push to output branch
         run: |
-          # Check if output branch exists
+          # Check if output branch exists remotely
           if git ls-remote --exit-code --heads origin output; then
+            git fetch origin output
             git checkout output
           else
             git checkout --orphan output
