@@ -1,6 +1,5 @@
 name: Sync Profile README
 
-# Trigger workflow on changes to README.md
 on:
   push:
     paths:
@@ -11,24 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout this repository (HardikMangukiya)
-      - name: Checkout repo
+      # Step 1: Checkout HardikMangukiya repo
+      - name: Checkout HardikMangukiya
         uses: actions/checkout@v3
 
-      # Step 2: Clone profile repository
+      # Step 2: Clone your profile repository
       - name: Clone profile repo
         run: |
           git clone https://github.com/HDmangukiya/HDmangukiya.git profile
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 3: Copy README.md to profile repo
+      # Step 3: Copy README.md
       - name: Copy README to profile repo
         run: |
           cp README.md profile/README.md
 
       # Step 4: Commit and push changes
-      - name: Commit and push to profile repo
+      - name: Commit and push
         run: |
           cd profile
           git config user.name "github-actions[bot]"
