@@ -1,40 +1,33 @@
-name: Sync Profile README
+name: Update README Automatically
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Optional: allows manual trigger
+  workflow_dispatch:
 
 jobs:
-  update-profile-readme:
+  update-readme:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout this repository (HardikMangukiya)
-      - name: Checkout HardikMangukiya
+      # Step 1: Checkout this repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Clone the profile repository (must exist and match username)
-      - name: Clone profile repository
+      # Step 2: Optional: Update README content automatically
+      - name: Update README
         run: |
-          git clone https://github.com/HDmangukiya/HDmangukiya.git profile
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # For example, append timestamp to README
+          echo -e "\nLast updated: $(date)" >> README.md
 
-      # Step 3: Copy README.md from HardikMangukiya to profile repo
-      - name: Copy README to profile repo
+      # Step 3: Commit & push changes
+      - name: Commit and Push
         run: |
-          cp README.md profile/README.md
-
-      # Step 4: Commit and push changes to profile repo
-      - name: Commit & Push to profile repo
-        run: |
-          cd profile
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add README.md
-          git commit -m "Sync README from HardikMangukiya" || echo "No changes to commit"
+          git commit -m "Automated update to README" || echo "No changes to commit"
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
