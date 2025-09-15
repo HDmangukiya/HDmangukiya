@@ -32,28 +32,41 @@ jobs:
           const parser = new Parser();
 
           (async () => {
+            const readmePath = "README.md";
+            const startTag = "<!-- BLOG-POST-LIST:START -->";
+            const endTag = "<!-- BLOG-POST-LIST:END -->";
+
+            let posts = [];
+
             try {
               const feedUrl = "https://medium.com/feed/@hardik.mangukiya.003";
               const feed = await parser.parseURL(feedUrl);
-
-              // Take top 5 posts
-              const posts = feed.items.slice(0,5).map(item => `- [${item.title}](${item.link})`);
-
-              const readmePath = "README.md";
-              let readme = fs.readFileSync(readmePath, "utf8");
-
-              const startTag = "<!-- BLOG-POST-LIST:START -->";
-              const endTag = "<!-- BLOG-POST-LIST:END -->";
-              const regex = new RegExp(`${startTag}[\\s\\S]*${endTag}`);
-
-              const newContent = `${startTag}\n${posts.join("\n")}\n${endTag}`;
-              readme = readme.replace(regex, newContent);
-
-              fs.writeFileSync(readmePath, readme);
-              console.log("README.md updated successfully.");
+              posts = feed.items.slice(0, 5).map(item => `- [${item.title}](${item.link})`);
             } catch (error) {
-              console.error("Failed to update README:", error.message);
+              console.warn("Failed to fetch Medium feed, using empty posts list:", error.message);
             }
+
+            // Read README
+            let readme = "";
+            try {
+              readme = fs.readFileSync(readmePath, "utf8");
+            } catch (error) {
+              console.warn("README.md not found, creating a new one");
+              readme = `${startTag}\n${endTag}`;
+            }
+
+            const regex = new RegExp(`${startTag}[\\s\\S]*${endTag}`);
+            const newContent = `${startTag}\n${posts.join("\n")}\n${endTag}`;
+
+            // Replace or append
+            if (readme.match(regex)) {
+              readme = readme.replace(regex, newContent);
+            } else {
+              readme += `\n${newContent}\n`;
+            }
+
+            fs.writeFileSync(readmePath, readme);
+            console.log("README.md updated successfully with latest posts.");
           })();
           EOF
 
