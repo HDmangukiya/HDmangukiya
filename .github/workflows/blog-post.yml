@@ -15,7 +15,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Pull in Medium posts
-        uses: gautamkrishnar/blog-post-workflow@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          feed_list: "https://medium.com/feed/@hardik.mangukiya.003"
+          node-version: 18
+
+      - name: Install RSS Parser
+        run: npm install rss-parser
+
+      - name: Update README with Medium posts
+        run: |
+          node - <<'EOF'
+          const fs = require("fs");
+          const Parser = require("rss-parser");
+          const parser = new Parser();
+
+          (async () => {
+            const feedUrl = "https://medium.com/feed/@hardik.mangukiya.003";
+            const feed = await parser.parseURL(feedUrl);
+
+            // Take top 5 posts
+            const posts = feed.items.slice(0, 5).map(item => `- [${item.title}](${item.link})`);
+
+            let readme = fs.readFileSync("README.md", "utf8");
+
+            const start = "<!-- BLOG-POST-LIST:START -->";
+            const end = "<!-- BLOG-POST-LIST:END -->";
+            const regex = new RegExp(`${start}[\\s\\S]*${end}`);
+
+            const newContent = `${start}\n${posts.join("\n")}\n${end}`;
+            readme = readme.replace(regex, newContent);
+
+            fs.writeFileSync("README.md", readme);
+          })();
+          EOF
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Updated README with latest blog posts" || echo "No changes to commit"
+          git push
